@@ -1,6 +1,6 @@
 {
   "aclManager": "0x79CBF4832439554885E4bec9457C1427DFB9D0d3",
-  "admin": "0x096f03ae4c33E9C9C0EC0dcbA29645382c38896b",
+  "admin": "0xC2b3075fB1AC9f5eCc1e2C07dA8bcCC43e7083fb",
   "defaultInterestRateStrategy": "0x701B26833A2dFa145B29Ef1264DE3a5240E17bBD",
   "deployer": "0x096f03ae4c33E9C9C0EC0dcbA29645382c38896b",
   "disabledStableDebtTokenImpl": "0x2d9C9f80e4DA27d30835aBd82c334f074E209eDa",
@@ -16,7 +16,7 @@
   "poolConfiguratorImpl": "0x7F4b3CfB3d60aD390E813bc745a44B9030510056",
   "poolImpl": "0x980BDd9cF1346800F6307E3B2301fFd3ce8C7523",
   "protocolDataProvider": "0x895C799a5bbdCb63B80bEE5BD94E7b9138D977d6",
-  "reserveInitializer": "0xafE1b6f29217fc917E3f9C725De07fDf4506f786",
+  "reserveInitializer": "0x032b896ea7b7Ae8EEA77b3d3F79be53072D2450a",
   "treasury": "0xdC6E5b7aA6fCbDECC1Fda2b1E337ED8569730288",
   "treasuryController": "0x9E6eFa77192DA81E22c8791Ba65c5A5E9795E697",
   "treasuryImpl": "0x2f268cF4730f17D00f7f2ce7f3B97cFE5845D862",

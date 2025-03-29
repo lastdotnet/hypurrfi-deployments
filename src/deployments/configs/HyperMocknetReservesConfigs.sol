@@ -345,7 +345,8 @@ contract HyperMocknetReservesConfigs {
             uiPoolDataProvider: deployedContracts.readAddress(".uiPoolDataProvider"),
             variableDebtTokenImpl: deployedContracts.readAddress(".variableDebtTokenImpl"),
             walletBalanceProvider: deployedContracts.readAddress(".walletBalanceProvider"),
-            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway")
+            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway"),
+            reserveInitializer: deployedContracts.readAddress(".reserveInitializer")
         });
     }
 

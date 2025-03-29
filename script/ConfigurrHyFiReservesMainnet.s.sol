@@ -8,7 +8,8 @@ import "forge-std/console.sol";
 import {HyperMainnetReservesConfigs} from "src/deployments/configs/HyperMainnetReservesConfigs.sol";
 import {DeployUtils} from "src/deployments/utils/DeployUtils.sol";
 import {IEACAggregatorProxy} from "@aave/periphery-v3/contracts/misc/interfaces/IEACAggregatorProxy.sol";
-
+import {ReserveInitializer} from "src/periphery/contracts/misc/ReserveInitializer.sol";
+import {ACLManager} from "@aave/core-v3/contracts/protocol/configuration/ACLManager.sol";
 contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
     using stdJson for string;
 
@@ -34,13 +35,14 @@ contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
 
         _setDeployRegistry(deployedContracts);
 
+        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+
         address[] memory tokens;
         address[] memory oracles;
 
         console.log("HypurrFi Mainnet Reserve Config");
         console.log("sender", msg.sender);
 
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
         tokens = _fetchMainnetTokens(config);
 
@@ -66,7 +68,7 @@ contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
         // enable borrowing
         _enableBorrowing(tokens);
 
-        // enable flashloans
+
         // _enableFlashloans(tokens);
 
         vm.stopBroadcast();

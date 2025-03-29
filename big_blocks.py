@@ -14,7 +14,6 @@ load_dotenv()
 
 def main(using_big_blocks):
     private_key = os.getenv("PRIVATE_KEY")
-    print(f"Using private key: {private_key}")
     
     wallet = eth_account.Account.from_key(private_key)
     print(f"Using wallet: {wallet.address}")

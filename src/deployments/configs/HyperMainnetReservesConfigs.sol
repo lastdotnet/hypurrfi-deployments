@@ -43,14 +43,13 @@ contract HyperMainnetReservesConfigs {
         internal view
         returns (address[] memory tokens)
     {
-        console.log("sender", msg.sender);
 
         tokens = new address[](1);
 
         // tokens[0] = address(config.readAddress(".nativeToken")); // WHYPE
         // tokens[1] = address(0x0000000000000000000000000000000000000000); // USDC
         // tokens[0] = address(0x94e8396e0869c9F2200760aF0621aFd240E1CF38); // wstHYPE
-        tokens[0] = address(0); // UETH
+        tokens[0] = address(0xBe6727B535545C67d5cAa73dEa54865B92CF7907); // UETH
 
         return tokens;
     }
@@ -79,6 +78,7 @@ contract HyperMainnetReservesConfigs {
     }
 
     function _initReserves(address[] memory tokens) internal {
+
         ConfiguratorInputTypes.InitReserveInput[] memory inputs =
             new ConfiguratorInputTypes.InitReserveInput[](tokens.length);
 
@@ -108,11 +108,12 @@ contract HyperMainnetReservesConfigs {
             }
         }
 
-        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool);
+        ReserveInitializer initializer = ReserveInitializer(deployRegistry.reserveInitializer);
 
+        address deployer = vm2.addr(vm2.envUint("PRIVATE_KEY"));
         uint256[] memory amounts = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length;) {
-            amounts[i] = 0.1e18;
+            amounts[i] = IERC20(tokens[i]).balanceOf(deployer);
             IERC20(tokens[i]).transfer(address(initializer), amounts[i]);
             unchecked {
                 i++;
@@ -294,7 +295,8 @@ contract HyperMainnetReservesConfigs {
             uiPoolDataProvider: deployedContracts.readAddress(".uiPoolDataProvider"),
             variableDebtTokenImpl: deployedContracts.readAddress(".variableDebtTokenImpl"),
             walletBalanceProvider: deployedContracts.readAddress(".walletBalanceProvider"),
-            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway")
+            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway"),
+            reserveInitializer: deployedContracts.readAddress(".reserveInitializer")
         });
     }
 

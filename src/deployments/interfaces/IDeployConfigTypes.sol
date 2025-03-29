@@ -27,5 +27,6 @@ interface IDeployConfigTypes {
         address variableDebtTokenImpl;
         address walletBalanceProvider;
         address wrappedHypeGateway;
+        address reserveInitializer;
     }
 }
