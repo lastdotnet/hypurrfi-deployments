@@ -197,7 +197,8 @@ contract HyperMainnetReservesConfigs {
                 supplyCap: tokenConfig.readUint(".supplyCap"),
                 borrowCap: tokenConfig.readUint(".borrowCap"),
                 debtCeiling: tokenConfig.readUint(".debtCeiling"),
-                isCollateralEnabled: tokenConfig.readBool(".isCollateralEnabled")
+                isCollateralEnabled: tokenConfig.readBool(".isCollateralEnabled"),
+                isFlashLoanEnabled: tokenConfig.readBool(".isFlashLoanEnabled")
             });
             unchecked {
                 i++;
