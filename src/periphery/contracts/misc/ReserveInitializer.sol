@@ -27,7 +27,7 @@ contract ReserveInitializer is Ownable {
         uint256 borrowCap;
         uint256 debtCeiling;
         bool isCollateralEnabled;
-
+        bool isFlashLoanEnabled;
     }
 
     constructor(
@@ -74,8 +74,9 @@ contract ReserveInitializer is Ownable {
                 POOL_CONFIGURATOR.setBorrowCap(inputs[i].underlyingAsset, config.borrowCap);
             }
 
-
-            POOL_CONFIGURATOR.setReserveFlashLoaning(inputs[i].underlyingAsset, true);
+            if (config.isFlashLoanEnabled) {
+                POOL_CONFIGURATOR.setReserveFlashLoaning(inputs[i].underlyingAsset, true);
+            }
 
             require(initialAmounts[i] > 0, "reserve cannot be initialized with zero supply");
             address underlyingAsset = inputs[i].underlyingAsset;
