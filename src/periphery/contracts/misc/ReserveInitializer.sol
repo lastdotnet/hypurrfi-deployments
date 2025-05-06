@@ -9,7 +9,6 @@ import {IWrappedHypeGateway} from 'src/periphery/contracts/misc/interfaces/IWrap
 import {IPoolConfigurator} from "aave-v3-core/contracts/interfaces/IPoolConfigurator.sol";
 import {IPool} from "aave-v3-core/contracts/interfaces/IPool.sol";
 import {ConfiguratorInputTypes} from "@aave/core-v3/contracts/protocol/libraries/types/ConfiguratorInputTypes.sol";
-
 /**
  * @title ReserveInitializer
  * @notice Contract to initialize reserves and handle token transfers, including HYPE to WHYPE wrapping
@@ -20,6 +19,16 @@ contract ReserveInitializer is Ownable {
     IWrappedHypeGateway public immutable WRAPPED_TOKEN_GATEWAY;
     IPoolConfigurator public immutable POOL_CONFIGURATOR;
     IPool public immutable POOL;
+    struct ReserveConfig {
+        uint256 ltv;
+        uint256 liquidationThreshold;
+        uint256 liquidationBonus;
+        uint256 supplyCap;
+        uint256 borrowCap;
+        uint256 debtCeiling;
+        bool isCollateralEnabled;
+
+    }
 
     constructor(
         address wrappedTokenGateway,
@@ -38,13 +47,36 @@ contract ReserveInitializer is Ownable {
      */
     function batchInitReserves(
         ConfiguratorInputTypes.InitReserveInput[] memory inputs,
-        uint256[] memory initialAmounts
+        uint256[] memory initialAmounts,
+        ReserveConfig[] memory reserveConfigs
     ) external payable onlyOwner {
+
         // Initialize reserves first
         IPoolConfigurator(POOL_CONFIGURATOR).initReserves(inputs);
 
         // Supply initial amounts to pool
         for (uint256 i = 0; i < inputs.length; i++) {
+            ReserveConfig memory config = reserveConfigs[i];
+            POOL_CONFIGURATOR.setReserveStableRateBorrowing(inputs[i].underlyingAsset, false);
+            if (config.isCollateralEnabled) {
+                POOL_CONFIGURATOR.configureReserveAsCollateral(inputs[i].underlyingAsset, config.ltv, config.liquidationThreshold, config.liquidationBonus);
+            }
+            
+            POOL_CONFIGURATOR.setReserveBorrowing(inputs[i].underlyingAsset, true);
+            
+            if (config.debtCeiling > 0) {
+                POOL_CONFIGURATOR.setDebtCeiling(inputs[i].underlyingAsset, config.debtCeiling);
+            }
+            if (config.supplyCap > 0) {
+                POOL_CONFIGURATOR.setSupplyCap(inputs[i].underlyingAsset, config.supplyCap);
+            }
+            if (config.borrowCap > 0) {
+                POOL_CONFIGURATOR.setBorrowCap(inputs[i].underlyingAsset, config.borrowCap);
+            }
+
+
+            POOL_CONFIGURATOR.setReserveFlashLoaning(inputs[i].underlyingAsset, true);
+
             require(initialAmounts[i] > 0, "reserve cannot be initialized with zero supply");
             address underlyingAsset = inputs[i].underlyingAsset;
 

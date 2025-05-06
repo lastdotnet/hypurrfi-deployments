@@ -52,16 +52,16 @@ contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
         // set reserve config
         _initReserves(tokens);
 
-        // disable stable debt
-        _disableStableDebt(tokens);
+        // // disable stable debt
+        // _disableStableDebt(tokens);
 
-        // enable collateral
-        _enableCollateral(tokens);
+        // // enable collateral
+        // _enableCollateral(tokens);
 
-        // enable borrowing
-        _enableBorrowing(tokens);
+        // // enable borrowing
+        // _enableBorrowing(tokens);
 
-        // enable flashloans
+        // // enable flashloans
         // _enableFlashloans(tokens);
 
         vm.stopBroadcast();
