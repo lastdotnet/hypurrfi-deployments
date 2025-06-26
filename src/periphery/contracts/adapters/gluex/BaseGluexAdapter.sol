@@ -13,15 +13,15 @@ import {DataTypes} from 'aave-v3-core/contracts/protocol/libraries/types/DataTyp
 import {GPv2SafeERC20} from 'aave-v3-core/contracts/dependencies/gnosis/contracts/GPv2SafeERC20.sol';
 import {SafeMath} from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/SafeMath.sol';
 import {Ownable} from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/Ownable.sol';
-import {FlashLoanSimpleReceiverBase} from 'src/periphery/contracts/misc/flashloan/base/FlashLoanSimpleReceiverBase.sol';
 import {IERC20Detailed} from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 
 /**
  * @title BaseGluexAdapter
  * @notice Utility functions for adapters using Gluex
  * @author Jason Raymond Bell
  */
-abstract contract BaseGluexAdapter is FlashLoanSimpleReceiverBase, Ownable {
+abstract contract BaseGluexAdapter is Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
   using GPv2SafeERC20 for IERC20;
@@ -39,6 +39,7 @@ abstract contract BaseGluexAdapter is FlashLoanSimpleReceiverBase, Ownable {
   uint256 public constant MAX_SLIPPAGE_PERCENT = 3000; // 30%
 
   IPriceOracleGetter public immutable ORACLE;
+  IPool public immutable POOL;
 
   event Swapped(
     address indexed fromAsset,
@@ -55,8 +56,9 @@ abstract contract BaseGluexAdapter is FlashLoanSimpleReceiverBase, Ownable {
 
   constructor(
     IPoolAddressesProvider addressesProvider
-  ) FlashLoanSimpleReceiverBase(addressesProvider) {
+  ) {
     ORACLE = IPriceOracleGetter(addressesProvider.getPriceOracle());
+    POOL = IPool(addressesProvider.getPool());
   }
 
   /**
@@ -80,8 +82,8 @@ abstract contract BaseGluexAdapter is FlashLoanSimpleReceiverBase, Ownable {
   }
 
   /**
-   * @dev Get the aToken associated to the asset
-   * @return address of the aToken
+   * @dev Get the hyToken associated to the asset
+   * @return address of the hyToken
    */
   function _getReserveData(
     address asset
@@ -89,36 +91,36 @@ abstract contract BaseGluexAdapter is FlashLoanSimpleReceiverBase, Ownable {
     return POOL.getReserveData(asset);
   }
 
-  function _pullATokenAndWithdraw(
+  function _pullHyTokenAndWithdraw(
     address reserve,
     address user,
     uint256 amount,
     PermitSignature memory permitSignature
-  ) internal {
-    IERC20WithPermit reserveAToken = IERC20WithPermit(
+  ) internal virtual {
+    IERC20WithPermit reserveHyToken = IERC20WithPermit(
       _getReserveData(address(reserve)).aTokenAddress
     );
-    _pullATokenAndWithdraw(reserve, reserveAToken, user, amount, permitSignature);
+    _pullHyTokenAndWithdraw(reserve, reserveHyToken, user, amount, permitSignature);
   }
 
   /**
-   * @dev Pull the ATokens from the user
+   * @dev Pull the hyTokens from the user
    * @param reserve address of the asset
-   * @param reserveAToken address of the aToken of the reserve
+   * @param reserveHyToken address of the hyToken of the reserve
    * @param user address
    * @param amount of tokens to be transferred to the contract
    * @param permitSignature struct containing the permit signature
    */
-  function _pullATokenAndWithdraw(
+  function _pullHyTokenAndWithdraw(
     address reserve,
-    IERC20WithPermit reserveAToken,
+    IERC20WithPermit reserveHyToken,
     address user,
     uint256 amount,
     PermitSignature memory permitSignature
-  ) internal {
+  ) internal virtual {
     // If deadline is set to zero, assume there is no signature for permit
     if (permitSignature.deadline != 0) {
-      reserveAToken.permit(
+      reserveHyToken.permit(
         user,
         address(this),
         permitSignature.amount,
@@ -130,7 +132,7 @@ abstract contract BaseGluexAdapter is FlashLoanSimpleReceiverBase, Ownable {
     }
 
     // transfer from user to adapter
-    reserveAToken.safeTransferFrom(user, address(this), amount);
+    reserveHyToken.safeTransferFrom(user, address(this), amount);
 
     // withdraw reserve
     require(POOL.withdraw(reserve, amount, address(this)) == amount, 'UNEXPECTED_AMOUNT_WITHDRAWN');

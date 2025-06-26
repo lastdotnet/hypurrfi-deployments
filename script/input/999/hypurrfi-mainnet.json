@@ -1,6 +1,7 @@
 {
     "admin": "0xC2b3075fB1AC9f5eCc1e2C07dA8bcCC43e7083fb",
     "deployer": "0x096f03ae4c33E9C9C0EC0dcbA29645382c38896b",
+    "gluexRouter": "0x6Ec7612828B776cC746fe0Ee5381CC93878844f7",
     "marketId": "HypurrFi Mainnet",
     "nativeToken": "0x5555555555555555555555555555555555555555",
     "nativeTokenOracle": "0x1d0E4EA616A749c1620118F7d97c111e8ec36E8b",
