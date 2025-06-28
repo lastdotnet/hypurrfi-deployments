@@ -177,17 +177,13 @@ contract HyperMainnetReservesConfigs {
             }
         }
 
-        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool);
+        address deployer = vm2.addr(vm2.envUint("PRIVATE_KEY"));
+        ReserveInitializer initializer = ReserveInitializer(deployRegistry.initializer);
 
         uint256[] memory amounts = new uint256[](tokens.length);
-        for (uint256 i; i < tokens.length;) {
-            amounts[i] = 0.1e18;
-            IERC20(tokens[i]).transfer(address(initializer), amounts[i]);
-            unchecked {
-                i++;
-            }
-        }
+        
         ReserveInitializer.ReserveConfig[] memory reserveConfigs = new ReserveInitializer.ReserveConfig[](tokens.length);
+        
         for (uint256 i; i < tokens.length;) {
             string memory tokenConfig = DeployUtils.readTokenConfig(tokens[i]);
             reserveConfigs[i] = ReserveInitializer.ReserveConfig({
@@ -197,18 +193,34 @@ contract HyperMainnetReservesConfigs {
                 supplyCap: tokenConfig.readUint(".supplyCap"),
                 borrowCap: tokenConfig.readUint(".borrowCap"),
                 debtCeiling: tokenConfig.readUint(".debtCeiling"),
-                isCollateralEnabled: tokenConfig.readBool(".isCollateralEnabled")
+                isCollateralEnabled: tokenConfig.readBool(".isCollateralEnabled"),
+                oracle: tokenConfig.readAddress(".oracleAddress")
             });
+            amounts[i] = tokenConfig.readUint(".initialSupply");
+            if (vm2.envBool("LOCAL_EXECUTE") == true) {
+                IERC20Metadata(tokens[i]).transfer(address(initializer), amounts[i]);            
+            }
             unchecked {
                 i++;
             }
         }
 
-        _addPoolAdmin(address(initializer));
+        // _addPoolAdmin(address(initializer));
         
-        initializer.batchInitReserves(inputs, amounts, reserveConfigs);
+        console.log("Initializer Address");
+        console.log(address(initializer));
+        bytes memory initReserveCalldata = abi.encodeWithSelector(initializer.batchInitReserves.selector, inputs, amounts, reserveConfigs);
+        console.log("Init Reserve Bytes");
+        console.logBytes(initReserveCalldata);
 
-        _removePoolAdmin(address(initializer));
+
+        if (vm2.envBool("LOCAL_EXECUTE") == true) {
+            initializer.batchInitReserves(inputs, amounts, reserveConfigs);
+        }
+
+        
+
+        // _removePoolAdmin(address(initializer));
     }
 
     function _disableStableDebt(address[] memory tokens) internal {
@@ -386,7 +398,8 @@ contract HyperMainnetReservesConfigs {
             uiPoolDataProvider: deployedContracts.readAddress(".uiPoolDataProvider"),
             variableDebtTokenImpl: deployedContracts.readAddress(".variableDebtTokenImpl"),
             walletBalanceProvider: deployedContracts.readAddress(".walletBalanceProvider"),
-            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway")
+            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway"),
+            initializer: deployedContracts.readAddress(".initializer")
         });
     }
 

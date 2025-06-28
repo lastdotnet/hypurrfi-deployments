@@ -9,6 +9,7 @@ import {IWrappedHypeGateway} from 'src/periphery/contracts/misc/interfaces/IWrap
 import {IPoolConfigurator} from "aave-v3-core/contracts/interfaces/IPoolConfigurator.sol";
 import {IPool} from "aave-v3-core/contracts/interfaces/IPool.sol";
 import {ConfiguratorInputTypes} from "@aave/core-v3/contracts/protocol/libraries/types/ConfiguratorInputTypes.sol";
+import {IAaveOracle} from "aave-v3-core/contracts/interfaces/IAaveOracle.sol";
 /**
  * @title ReserveInitializer
  * @notice Contract to initialize reserves and handle token transfers, including HYPE to WHYPE wrapping
@@ -19,6 +20,7 @@ contract ReserveInitializer is Ownable {
     IWrappedHypeGateway public immutable WRAPPED_TOKEN_GATEWAY;
     IPoolConfigurator public immutable POOL_CONFIGURATOR;
     IPool public immutable POOL;
+    IAaveOracle public immutable ORACLE;
     struct ReserveConfig {
         uint256 ltv;
         uint256 liquidationThreshold;
@@ -26,18 +28,20 @@ contract ReserveInitializer is Ownable {
         uint256 supplyCap;
         uint256 borrowCap;
         uint256 debtCeiling;
+        address oracle;
         bool isCollateralEnabled;
-
     }
 
     constructor(
         address wrappedTokenGateway,
         address poolConfigurator,
-        address pool
+        address pool,
+        address oracle
     ) Ownable() {
         WRAPPED_TOKEN_GATEWAY = IWrappedHypeGateway(wrappedTokenGateway);
         POOL_CONFIGURATOR = IPoolConfigurator(poolConfigurator);
         POOL = IPool(pool);
+        ORACLE = IAaveOracle(oracle);
     }
 
     /**
@@ -51,44 +55,56 @@ contract ReserveInitializer is Ownable {
         ReserveConfig[] memory reserveConfigs
     ) external payable onlyOwner {
 
-        // Initialize reserves first
+
+        // Step 1: Set oracle Feeds for anything that is being initialized
+        address[] memory assets = new address[](inputs.length);
+        address[] memory oracles = new address[](inputs.length);
+        for (uint256 i = 0; i < inputs.length; i++) {
+            assets[i] = inputs[i].underlyingAsset;
+            oracles[i] = reserveConfigs[i].oracle;
+        }
+        ORACLE.setAssetSources(assets, oracles);
+        // Initialize Reserves
         IPoolConfigurator(POOL_CONFIGURATOR).initReserves(inputs);
 
-        // Supply initial amounts to pool
+        // Step 3: Configure Reserves
         for (uint256 i = 0; i < inputs.length; i++) {
             ReserveConfig memory config = reserveConfigs[i];
-            POOL_CONFIGURATOR.setReserveStableRateBorrowing(inputs[i].underlyingAsset, false);
+            address underlyingAsset = inputs[i].underlyingAsset;
+            uint256 initialAmount = initialAmounts[i];
+
+            POOL_CONFIGURATOR.setReserveStableRateBorrowing(underlyingAsset, false);
+            
             if (config.isCollateralEnabled) {
-                POOL_CONFIGURATOR.configureReserveAsCollateral(inputs[i].underlyingAsset, config.ltv, config.liquidationThreshold, config.liquidationBonus);
+                POOL_CONFIGURATOR.configureReserveAsCollateral(underlyingAsset, config.ltv, config.liquidationThreshold, config.liquidationBonus);
             }
             
-            POOL_CONFIGURATOR.setReserveBorrowing(inputs[i].underlyingAsset, true);
+            POOL_CONFIGURATOR.setReserveBorrowing(underlyingAsset, true);
             
             if (config.debtCeiling > 0) {
-                POOL_CONFIGURATOR.setDebtCeiling(inputs[i].underlyingAsset, config.debtCeiling);
+                POOL_CONFIGURATOR.setDebtCeiling(underlyingAsset, config.debtCeiling);
             }
             if (config.supplyCap > 0) {
-                POOL_CONFIGURATOR.setSupplyCap(inputs[i].underlyingAsset, config.supplyCap);
+                POOL_CONFIGURATOR.setSupplyCap(underlyingAsset, config.supplyCap);
             }
             if (config.borrowCap > 0) {
-                POOL_CONFIGURATOR.setBorrowCap(inputs[i].underlyingAsset, config.borrowCap);
+                POOL_CONFIGURATOR.setBorrowCap(underlyingAsset, config.borrowCap);
             }
 
 
-            POOL_CONFIGURATOR.setReserveFlashLoaning(inputs[i].underlyingAsset, true);
+            POOL_CONFIGURATOR.setReserveFlashLoaning(underlyingAsset, true);
 
-            require(initialAmounts[i] > 0, "reserve cannot be initialized with zero supply");
-            address underlyingAsset = inputs[i].underlyingAsset;
+            require(initialAmount > 0, "reserve cannot be initialized with zero supply");
 
             if (underlyingAsset == address(WRAPPED_TOKEN_GATEWAY.getWHYPEAddress()) && msg.value > 0) {
                 // For HYPE tokens, wrap them to WHYPE first
                 WRAPPED_TOKEN_GATEWAY.depositHYPE{value: msg.value}(address(POOL), msg.sender, 0);
             } else {
-                require(IERC20(underlyingAsset).balanceOf(address(this)) >= initialAmounts[i], string(abi.encodePacked("Insufficient balance of ", IERC20Metadata(underlyingAsset).symbol())));
+                require(IERC20(underlyingAsset).balanceOf(address(this)) >= initialAmount, string(abi.encodePacked("Insufficient balance of ", IERC20Metadata(underlyingAsset).symbol())));
                 // Approve pool to spend tokens
-                IERC20(underlyingAsset).safeIncreaseAllowance(address(POOL), initialAmounts[i]);
+                IERC20(underlyingAsset).safeIncreaseAllowance(address(POOL), initialAmount);
                 // Supply to pool
-                POOL.supply(underlyingAsset, initialAmounts[i], address(0), 0);
+                POOL.supply(underlyingAsset, initialAmount, address(0), 0);
             }
         }
     }

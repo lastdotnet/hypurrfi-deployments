@@ -105,7 +105,7 @@ contract HyperMocknetReservesConfigs {
             }
         }
 
-        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool);
+        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool, deployRegistry.hyFiOracle);
 
         address payable whype = payable(deployedContracts.readAddress(".whype"));
         address usdc = deployedContracts.readAddress(".usdc");
@@ -133,7 +133,8 @@ contract HyperMocknetReservesConfigs {
                 ltv: 0,
                 liquidationThreshold: 0,
                 liquidationBonus: 0,
-                isCollateralEnabled: false
+                isCollateralEnabled: false,
+                oracle: address(0)
             });
             unchecked {
                 i++;
@@ -359,7 +360,8 @@ contract HyperMocknetReservesConfigs {
             uiPoolDataProvider: deployedContracts.readAddress(".uiPoolDataProvider"),
             variableDebtTokenImpl: deployedContracts.readAddress(".variableDebtTokenImpl"),
             walletBalanceProvider: deployedContracts.readAddress(".walletBalanceProvider"),
-            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway")
+            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway"),
+            initializer: deployedContracts.readAddress(".initializer")
         });
     }
 

@@ -8,6 +8,7 @@ import "forge-std/console.sol";
 import {HyperMainnetReservesConfigs} from "src/deployments/configs/HyperMainnetReservesConfigs.sol";
 import {DeployUtils} from "src/deployments/utils/DeployUtils.sol";
 import {IEACAggregatorProxy} from "@aave/periphery-v3/contracts/misc/interfaces/IEACAggregatorProxy.sol";
+import {ReserveInitializer} from "src/periphery/contracts/misc/ReserveInitializer.sol";
 
 contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
     using stdJson for string;
@@ -40,17 +41,35 @@ contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
         console.log("HypurrFi Mainnet Reserve Config");
         console.log("sender", msg.sender);
 
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-
         tokens = _fetchTokens(config);
 
-        oracles = _fetchOracles(config);
+        // fetch oracle data
+        _fetchOracles(config);
+
+
+        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+
+        if (vm.envBool("NEW_INITIALIZER") == true) {
+            ReserveInitializer initializer = new ReserveInitializer(
+                deployRegistry.wrappedHypeGateway,
+                deployRegistry.poolConfigurator,
+                deployRegistry.pool,
+                deployRegistry.hyFiOracle
+            );
+            deployRegistry.initializer = address(initializer);
+
+            console.log("Fresh Initializer Deployed Address");
+            console.log(address(initializer));
+        }
+
+        _initReserves(tokens);
+        
+        vm.stopBroadcast();
 
         // set oracles
-        _getAaveOracle().setAssetSources(tokens, oracles);
+        // _getAaveOracle().setAssetSources(tokens, oracles);
 
         // set reserve config
-        _initReserves(tokens);
 
         // // disable stable debt
         // _disableStableDebt(tokens);
@@ -64,6 +83,5 @@ contract ConfigurrHyFiReserves is HyperMainnetReservesConfigs, Script {
         // // enable flashloans
         // _enableFlashloans(tokens);
 
-        vm.stopBroadcast();
     }
 }
