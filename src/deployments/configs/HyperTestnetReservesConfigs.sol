@@ -185,11 +185,26 @@ contract HyperTestnetReservesConfigs {
             }
         }
 
-        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool);
+        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool, deployRegistry.hyFiOracle);
         
         _addPoolAdmin(address(initializer));
-        
-        initializer.batchInitReserves(inputs, amounts);
+        ReserveInitializer.ReserveConfig[] memory reserveConfigs = new ReserveInitializer.ReserveConfig[](tokens.length);
+        for (uint256 i; i < tokens.length;) {
+            reserveConfigs[i] = ReserveInitializer.ReserveConfig({
+                debtCeiling: 0,
+                supplyCap: 0,
+                borrowCap: 0,
+                ltv: 0,
+                liquidationThreshold: 0,
+                liquidationBonus: 0,
+                isCollateralEnabled: false,
+                oracle: address(0)
+            });
+            unchecked {
+                i++;
+            }
+        }
+        initializer.batchInitReserves(inputs, amounts, reserveConfigs);
 
         _removePoolAdmin(address(initializer));
     }
@@ -352,7 +367,8 @@ contract HyperTestnetReservesConfigs {
             uiPoolDataProvider: deployedContracts.readAddress(".uiPoolDataProvider"),
             variableDebtTokenImpl: deployedContracts.readAddress(".variableDebtTokenImpl"),
             walletBalanceProvider: deployedContracts.readAddress(".walletBalanceProvider"),
-            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway")
+            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway"),
+            initializer: deployedContracts.readAddress(".initializer")
         });
     }
 

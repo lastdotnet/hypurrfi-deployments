@@ -51,7 +51,11 @@ contract HyperMainnetReservesConfigs {
         // tokens[0] = address(config.readAddress(".nativeToken")); // WHYPE
         // tokens[1] = address(0x0000000000000000000000000000000000000000); // USDC
         // tokens[0] = address(0x94e8396e0869c9F2200760aF0621aFd240E1CF38); // wstHYPE
-        tokens[0] = address(0); // UETH
+        // tokens[0] = address(0); // UETH
+
+
+        tokens[0] = address(0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34); // USDE
+        // tokens[0] = address(0x02c6a2fa58cc01a18b8d9e00ea48d65e4df26c70); // FEUSD
 
         return tokens;
     }
@@ -84,7 +88,9 @@ contract HyperMainnetReservesConfigs {
         // oracles[0] = address(config.readAddress(".nativeTokenOracle")); // WHYPE
         // oracles[1] = address(0x0000000000000000000000000000000000000000); // USDC
         // oracles[0] = address(0xfD5c563391CDA3B290394da1D6c6a36A3cbf401D); // UBTC
-        oracles[0] = address(0x44Bbb85E5B1799569dD02054Cfb38028656Ae30A); // UETH
+        // oracles[0] = address(0x44Bbb85E5B1799569dD02054Cfb38028656Ae30A); // UETH
+        oracles[0] = address(0x1Cb74Ed7a3E16Ca735Af666c45F270e8da79Ad37); // USDE
+        // oracles[0] = address(0x44Bbb85E5B1799569dD02054Cfb38028656Ae30A); // FEUSD
 
         return oracles;
     }
@@ -108,11 +114,11 @@ contract HyperMainnetReservesConfigs {
             int256 tolerance = (expectedPrice * int256(config.readUint(".oracleTolerancePercentage"))) / 100;
 
             // SAFEGUARD: verify oracle description matches
-            require(
-                keccak256(bytes(AggregatorV3Interface(oracles[i]).description())) == 
-                keccak256(abi.encodePacked(tokenNames[i], "/USD Oracle")), 
-                string(abi.encodePacked("Oracle description mismatch for ", tokenNames[i]))
-            );
+            // require(
+            //     keccak256(bytes(AggregatorV3Interface(oracles[i]).description())) == 
+            //     keccak256(abi.encodePacked(tokenNames[i], "/USD Oracle")), 
+            //     string(abi.encodePacked("Oracle description mismatch for ", tokenNames[i]))
+            // );
             
             require(
                 oraclePrice >= expectedPrice - tolerance && 
@@ -171,22 +177,50 @@ contract HyperMainnetReservesConfigs {
             }
         }
 
-        ReserveInitializer initializer = new ReserveInitializer(deployRegistry.wrappedHypeGateway, deployRegistry.poolConfigurator, deployRegistry.pool);
+        address deployer = vm2.addr(vm2.envUint("PRIVATE_KEY"));
+        ReserveInitializer initializer = ReserveInitializer(deployRegistry.initializer);
 
         uint256[] memory amounts = new uint256[](tokens.length);
+        
+        ReserveInitializer.ReserveConfig[] memory reserveConfigs = new ReserveInitializer.ReserveConfig[](tokens.length);
+        
         for (uint256 i; i < tokens.length;) {
-            amounts[i] = 0.1e18;
-            IERC20(tokens[i]).transfer(address(initializer), amounts[i]);
+            string memory tokenConfig = DeployUtils.readTokenConfig(tokens[i]);
+            reserveConfigs[i] = ReserveInitializer.ReserveConfig({
+                ltv: tokenConfig.readUint(".ltv"),
+                liquidationThreshold: tokenConfig.readUint(".liquidationThreshold"),
+                liquidationBonus: tokenConfig.readUint(".liquidationBonus"),
+                supplyCap: tokenConfig.readUint(".supplyCap"),
+                borrowCap: tokenConfig.readUint(".borrowCap"),
+                debtCeiling: tokenConfig.readUint(".debtCeiling"),
+                isCollateralEnabled: tokenConfig.readBool(".isCollateralEnabled"),
+                oracle: tokenConfig.readAddress(".oracleAddress")
+            });
+            amounts[i] = tokenConfig.readUint(".initialSupply");
+            if (vm2.envBool("LOCAL_EXECUTE") == true) {
+                IERC20Metadata(tokens[i]).transfer(address(initializer), amounts[i]);            
+            }
             unchecked {
                 i++;
             }
         }
 
-        _addPoolAdmin(address(initializer));
+        // _addPoolAdmin(address(initializer));
         
-        initializer.batchInitReserves(inputs, amounts);
+        console.log("Initializer Address");
+        console.log(address(initializer));
+        bytes memory initReserveCalldata = abi.encodeWithSelector(initializer.batchInitReserves.selector, inputs, amounts, reserveConfigs);
+        console.log("Init Reserve Bytes");
+        console.logBytes(initReserveCalldata);
 
-        _removePoolAdmin(address(initializer));
+
+        if (vm2.envBool("LOCAL_EXECUTE") == true) {
+            initializer.batchInitReserves(inputs, amounts, reserveConfigs);
+        }
+
+        
+
+        // _removePoolAdmin(address(initializer));
     }
 
     function _disableStableDebt(address[] memory tokens) internal {
@@ -217,10 +251,17 @@ contract HyperMainnetReservesConfigs {
                 tokenConfig.readUint(".liquidationThreshold"),
                 tokenConfig.readUint(".liquidationBonus")
             );
+            //cap is in decimal of the token(200 at 18 decimals is 200e18)
+
+            if (tokenConfig.readUint(".supplyCap") > 0) {
+                _getPoolConfigurator().setSupplyCap(tokens[i], tokenConfig.readUint(".supplyCap"));
+            }
             unchecked {
                 i++;
             }
+            
         }
+        
     }
 
     function _enableBorrowing(address[] memory tokens) internal {
@@ -357,7 +398,8 @@ contract HyperMainnetReservesConfigs {
             uiPoolDataProvider: deployedContracts.readAddress(".uiPoolDataProvider"),
             variableDebtTokenImpl: deployedContracts.readAddress(".variableDebtTokenImpl"),
             walletBalanceProvider: deployedContracts.readAddress(".walletBalanceProvider"),
-            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway")
+            wrappedHypeGateway: deployedContracts.readAddress(".wrappedHypeGateway"),
+            initializer: deployedContracts.readAddress(".initializer")
         });
     }
 

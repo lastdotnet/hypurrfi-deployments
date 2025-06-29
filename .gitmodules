@@ -24,3 +24,6 @@
 [submodule "lib/dss-test"]
 	path = lib/dss-test
 	url = https://github.com/makerdao/dss-test
+[submodule "lib/pyth-adapters"]
+	path = lib/pyth-adapters
+	url = https://github.com/lastdotnet/pyth-adapters
