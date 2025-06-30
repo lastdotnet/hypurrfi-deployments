@@ -119,18 +119,23 @@ contract GluexRepayAdapter is BaseGluexBuyAdapter, ReentrancyGuard, IERC3156Flas
     // Decode data: (flashData)
     FlashLoanData memory flashData = abi.decode(data, (FlashLoanData));
 
+    // Repay debt first using the flash loaned debt tokens
+    IERC20(token).safeApprove(address(POOL), flashData.debtRepayAmount);
+    POOL.repay(address(token), flashData.debtRepayAmount, flashData.rateMode, flashData.user);
+    IERC20(token).safeApprove(address(POOL), 0);
+
     // Pull hyTokens (collateral) from user
     _pullHyTokenAndWithdraw(address(flashData.collateralAsset), flashData.user, flashData.collateralAmount, flashData.permitSignature);
 
-    // Calculate total debt to cover (flash loan amount + fee)
-    uint256 totalDebtToCover = amount + fee;
-
-    // Swap collateral to debt asset - we need to swap enough to cover totalDebtToCover
+    // Swap collateral to debt asset to repay the flash loan
     (uint256 amountSold, uint256 amountBought) = _buyOnGluex(
       flashData.gluexData,
       flashData.collateralAsset,
       IERC20(token)
     );
+
+    // Calculate total debt to cover (flash loan amount + fee)
+    uint256 totalDebtToCover = amount.add(fee);
 
     // Verify we got enough debt asset to cover the flash loan
     require(amountBought >= totalDebtToCover, "INSUFFICIENT_DEBT_ASSET_SWAPPED");

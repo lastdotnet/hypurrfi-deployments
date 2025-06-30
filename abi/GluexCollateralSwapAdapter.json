@@ -1,0 +1,379 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "addressesProvider",
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
+      },
+      {
+        "name": "gluexRouter",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "CALLBACK_SUCCESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GLUEX_ROUTER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_SLIPPAGE_PERCENT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ORACLE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPriceOracleGetter"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "POOL",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "flashLoanAndSwap",
+    "inputs": [
+      {
+        "name": "fromCollateralAsset",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "toCollateralAsset",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "fromCollateralAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "rateMode",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "gluexData",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "permitSignature",
+        "type": "tuple",
+        "internalType": "struct BaseGluexAdapter.PermitSignature",
+        "components": [
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "v",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "r",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "s",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "onFlashLoan",
+    "inputs": [
+      {
+        "name": "initiator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "renounceOwnership",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rescueTokens",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "swapCollateral",
+    "inputs": [
+      {
+        "name": "fromCollateralAsset",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "toCollateralAsset",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "fromCollateralAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "gluexData",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "permitSignature",
+        "type": "tuple",
+        "internalType": "struct BaseGluexAdapter.PermitSignature",
+        "components": [
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "v",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "r",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "s",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Bought",
+    "inputs": [
+      {
+        "name": "fromAsset",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "toAsset",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amountSold",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "receivedAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Swapped",
+    "inputs": [
+      {
+        "name": "fromAsset",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "toAsset",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "fromAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "receivedAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  }
+]
